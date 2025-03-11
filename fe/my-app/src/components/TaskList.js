@@ -1,25 +1,42 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { TaskContext } from "../context/TaskContext";
-import { deleteTask,updateTask } from "../api/api";
+import { deleteTask, updateTask } from "../api/api";
 import EditTask from "./EditTask";
+import AddTask from "./AddTask";
+import "./TaskList.css";
+
+
 
 const TaskList = () => {
+  const navigate = useNavigate();
   const { tasks, fetchTasks, loading } = useContext(TaskContext);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [editTask, setEditTask] = useState(null);
 
-  const handleSearch = () => fetchTasks(`search=${search}&status=${status}&page=${page}`);
-
+  const handleSearch = () => {
+    const query = status ? `search=${search}&status=${status}&page=${page}` : `search=${search}&page=${page}`;
+    fetchTasks(query);
+  };
+  
   const handleDelete = async (id) => {
     await deleteTask(id);
     fetchTasks();
   };
+
   const handleToggleStatus = async (task) => {
-    await updateTask(task._id, { ...task, status: task.status === "completed" ? "pending" : "completed" });
+    await updateTask(task._id, {
+      ...task,
+      status: task.status === "completed" ? "pending" : "completed",
+    });
     fetchTasks();
   };
+
+  useEffect(() => {
+    handleSearch();
+  }, [page, status]);
 
   return (
     <div>
@@ -30,24 +47,43 @@ const TaskList = () => {
         <option value="pending">Pending</option>
       </select>
       <button onClick={handleSearch}>Search</button>
+      <button onClick={() => navigate("/add-task")}>Go to Add Task</button>
+      
 
-      {loading ? <p>Loading...</p> : tasks.map((task) => (
-        <div key={task._id}>
-        <h3>{task.title}</h3>
-        <p>{task.description}</p>
-        <p>Due: {task.dueDate}</p>
-        <button onClick={() => handleToggleStatus(task)}>
-          {task.status === "completed" ? "Mark as Incomplete" : "Mark as Complete"}
-        </button>
-        <button onClick={() => setEditTask(task)}>Edit</button>
-        <button onClick={() => handleDelete(task._id)}>Delete</button>
-      </div>
-      ))}
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        tasks?.map((task) => (
+          <div key={task._id}>
+            <h3>{task.title}</h3>
+            <p>{task.description}</p>
+            <p>Due: {new Date(task.dueDate).toLocaleDateString("en-GB")}</p>
 
-      <button onClick={() => setPage((prev) => prev - 1)} disabled={page === 1}>Previous</button>
+            <button onClick={() => handleToggleStatus(task)}>
+              {task.status === "completed" ? "Mark as Incomplete" : "Mark as Complete"}
+            </button>
+            <button onClick={() => setEditTask(task)}>Edit</button>
+            <button onClick={() => handleDelete(task._id)}>Delete</button>
+          </div>
+        ))
+      )}
+
+      <button onClick={() => setPage((prev) => prev - 1)} disabled={page === 1}>
+        Previous
+      </button>
       <button onClick={() => setPage((prev) => prev + 1)}>Next</button>
 
-      {editTask && <EditTask task={editTask} closeModal={() => setEditTask(null)} />}
+      {/* Edit Task Modal */}
+      {editTask && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <EditTask task={editTask} closeModal={() => setEditTask(null)} />
+            <button className="close-button" onClick={() => setEditTask(null)}>
+              ✖ 
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

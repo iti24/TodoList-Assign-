@@ -6,35 +6,39 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();  // Add useNavigate
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);  // New loading state
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) setUser({ token });
+const token = localStorage.getItem("token");
+    if (token) {
+      setUser({ token });
+      setIsAuthenticated(true);
+    }
+    setLoading(false);  // Ensure loading is set to false after checking
   }, []);
 
   const login = async (userData) => {
     const data = await signin(userData);
     if (data.token) {
       localStorage.setItem("token", data.token);
-      setUser(data);
-      console.log("Login Successful:", data);
-
-      navigate("/");  // Redirect to TaskList page after login
+      setUser({ token: data.token });
+      setIsAuthenticated(true);
+      navigate("/");
     }
     return data;
-  };
-
-  const register = async (userData) => await signup(userData);
+  };const register = async (userData) => await signup(userData);
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/signin");  // Redirect to Signin after logout
+    setIsAuthenticated(false);
+    navigate("/signin");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );

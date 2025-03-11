@@ -22,7 +22,13 @@ const EditTask = ({ task, closeModal }) => {
     <form onSubmit={handleSubmit}>
     <input type="text" value={updatedTask.title} onChange={(e) => setUpdatedTask({ ...updatedTask, title: e.target.value })} />
     <input type="text" value={updatedTask.description} onChange={(e) => setUpdatedTask({ ...updatedTask, description: e.target.value })} />
-    <input type="date" value={updatedTask.dueDate} onChange={(e) => setUpdatedTask({ ...updatedTask, dueDate: e.target.value })} />
+    {/* <input type="date" value={updatedTask.dueDate} onChange={(e) => setUpdatedTask({ ...updatedTask, dueDate: e.target.value })} /> */}
+    <input
+  type="date"
+  value={updatedTask.dueDate ? updatedTask.dueDate.split("T")[0] : ""} 
+  onChange={(e) => setUpdatedTask({ ...updatedTask, dueDate: e.target.value })}
+/>
+
     <button type="submit">Update Task</button>
   </form>
   );
