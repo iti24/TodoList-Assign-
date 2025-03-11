@@ -13,9 +13,38 @@ const createTask = async (req, res) => {
 };
 
 // Get Tasks with Pagination
+// const getTasks = async (req, res) => {
+//   try {
+//     const { search = "", status = "", page = 1, limit = 5 } = req.query;
+
+//     const query = {};
+    
+//     if (search) {
+//       query.title = { $regex: search, $options: "i" }; // Case-insensitive search
+//     }
+
+//     if (status) {
+//       query.status = status; // Filter by status (status/pending)
+//     }
+
+//     const tasks = await Task.find(query)
+//       .skip((page - 1) * limit)
+//       .limit(parseInt(limit))
+//       .sort({ createdAt: -1 }); // Sort by newe
+// const totalTasks = await Task.countDocuments(query);
+
+//     res.json({
+//       tasks,
+//       totalPages: Math.ceil(totalTasks / limit),
+//       currentPage: page,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: "Server Error" });
+//   }
+// };
 const getTasks = async (req, res) => {
   try {
-    const { search = "", status = "", page = 1, limit = 10 } = req.query;
+    const { search = "", status = "", page = 1, limit = 5 } = req.query;
 
     const query = {};
     
@@ -24,19 +53,24 @@ const getTasks = async (req, res) => {
     }
 
     if (status) {
-      query.status = status; // Filter by status (status/pending)
+      query.status = status; // Filter by status
     }
 
+    const pageNum = parseInt(page, 10) || 1; 
+    const limitNum = parseInt(limit, 10) || 5;
+    const skip = (pageNum - 1) * limitNum;
+
     const tasks = await Task.find(query)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .sort({ createdAt: -1 }); // Sort by newe
-const totalTasks = await Task.countDocuments(query);
+      .skip(skip)
+      .limit(limitNum)
+      .sort({ createdAt: -1 });
+
+    const totalTasks = await Task.countDocuments(query);
 
     res.json({
       tasks,
-      totalPages: Math.ceil(totalTasks / limit),
-      currentPage: page,
+      totalPages: Math.ceil(totalTasks / limitNum),
+      currentPage: pageNum,
     });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
